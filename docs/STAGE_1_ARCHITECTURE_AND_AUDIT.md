@@ -246,6 +246,41 @@ The active target is now canonical Studio Next / 61997 through `studio-dev` pres
 
 The system cannot eliminate compromised official sources, post-finality corrections, availability failures, semantic disagreement, or the legal/regulatory implications of financial prediction agreements. It must not describe refunds as legal advice or assume all jurisdictions permit the product.
 
+## Stage 1.3 Studio Next Web Render Proof
+
+**THIS IS A TEST-ONLY VERIFICATION CONTRACT. IT IS NOT THE RESULTLINE PRODUCTION DEPLOYMENT.**
+
+The exact source is `tests/runtime_verification/web_render_probe.py`, committed at `d22acc54122b6a15e7db5d5040c5d98b469eedbf` (source blob unchanged). The authorized account was `0x3a3168d67a110de79461939047a8f7334ff1423d`; the pinned CLI reported network `studio-dev`, RPC `https://studio-dev.genlayer.com/api`, chain ID `61997`, and balance `29.992973007249926518 GEN` without exposing key material.
+
+### Checks before deployment
+
+- TEST-ONLY WEB-RENDER VERIFICATION CONTRACT was created and its source was re-verified against the committed blob.
+- `genvm-lint lint tests/runtime_verification/web_render_probe.py --json` passed (`passed: 3`).
+- The applicable direct test was run with the exact GenVM v0.6.0-rc5 bundle. It reaches the Windows runner but fails in the local runner's temporary-stdin cleanup (`PermissionError [WinError 32]`); this is a tooling/platform limitation and the test was not weakened.
+- Full `genvm-lint check` reaches semantic loading but reports `E104 ... name 'gl' is not defined` despite the official `from genlayer import *` source form; AST lint passes. This is recorded as a linter/loader limitation, not a source rewrite.
+
+### Authorized deployment result
+
+The CLI fee estimate returned `feeValue=100000000000010352` wei (~0.100000000000010352 GEN). The first two submissions were rejected by the CLI/devnet as `FeeValueMustBeNonZero`; the third submission used the complete estimator fee object. It produced:
+
+- deployment transaction: `0xc1a5e139046392b990bb5434e268e8250c6149a90f9ed4760ca98331fd9154e8`
+- contract address: `0xf438ffc1E33dE40e7f0ee2f8f7bCE49E8A2c1B34`
+- lifecycle: `FINALIZED`, outcome `accepted`, majority agree, round 0, 5 votes committed/revealed
+- fee settlement: `78,628,000,000,823` wei consumed; `99,921,372,000,009,529` wei refunded
+
+The finalized receipt's leader execution result was `FINISHED_WITH_ERROR`, with payload `invalid_contract runner malformed`. Therefore no callable probe method or schema/readback is claimed, and no render transaction was attempted after the failed deployment. The CLI trace endpoint is unavailable on this RPC (`gen_dbg_traceTransaction` method not found).
+
+### Runtime proof and metadata matrix
+
+| Probe | Result | Runtime metadata |
+|---|---|---|
+| `gl.nondet.web.get("https://example.com/")` | NOT VERIFIED: deployment runner malformed | URL, final URL, redirects, status, headers, content type, and raw body not exposed |
+| `gl.nondet.web.render(..., mode="text")` | NOT VERIFIED: no callable contract | Same metadata fields not exposed |
+| `gl.nondet.web.render(..., mode="html")` | NOT VERIFIED: no callable contract | Same metadata fields not exposed |
+| invalid/unavailable URL failure path | NOT TESTED: existing probe has no failure method; no extra deployment authorized | — |
+
+The deployment proves account/network/fee/lifecycle plumbing only; it does **not** prove GET or render behavior. No backend path, RESULTLINE state, frontend, or production contract was created. The remaining limitation is that the probe stores only booleans and does not expose raw content or metadata even if its runner is repaired.
+
 ## STAGE 2 REMAINS BLOCKED
 
-Do not start Stage 2. The environment and pinned runner are verified, but the required real test-only GenVM render proof has not been possible without a configured funded Studio Next account. After the user supplies or authorizes a test account/faucet flow, deploy a clearly labeled throwaway render probe only to Studio Next / `61997` through `studio-dev`, record its address/transactions/output, and revise this audit if the runtime differs from the documented behavior.
+Do not start Stage 2. The authorized throwaway deployment finalized but failed with `invalid_contract runner malformed`; GET/render callable proof and failure-path proof therefore remain incomplete. No RESULTLINE production contract has been created and no further deployment is authorized in this stage.
