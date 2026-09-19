@@ -24,7 +24,7 @@ The contract does not depend on final URL, redirect chain, status, headers, or c
 
 ## Semantic adjudication
 
-The current contract exposes a defensive `resolve(agreement_id, outcome, evidence_id)` boundary for the structured result that a later comparative leader/validator flow must supply. It accepts only `CONFIRMED_TRUE`, `CONFIRMED_FALSE`, `UNRESOLVED`, or `INVALID_EVENT`, and verifies that the evidence ID belongs to the agreement. No LLM prose or stake amount controls transfers. Comparative equivalence and prompt construction remain the next integration increment; no arbitrary model API was invented.
+The contract exposes `resolve(agreement_id)`. It builds a structured result from frozen constitution/evidence through the verified comparative API, then validates outcome enums and evidence IDs before mutation. No caller-supplied verdict, LLM prose, or stake amount controls transfers.
 
 ## Economics and security invariants
 
@@ -35,7 +35,7 @@ Payable stake value is separate from protocol fees. Matching requires exact equa
 - `genvm-lint lint contracts/resultline.py --json`: passed (3 checks).
 - `genvm-lint check contracts/resultline.py --json`: passed; `Resultline`, 11 methods, 4 views, 7 writes.
 - Read-only Studio Devnet `gen_getContractSchemaForCode`: passed; all public signatures and payable flags resolved.
-- `pytest -q tests/contracts/test_resultline_contract.py`: **11 passed**.
+- `pytest -q tests/contracts/test_resultline_contract.py`: **14 passed**.
 - The existing `gltest` direct runner remains affected by the documented Windows temporary-stdin cleanup `PermissionError [WinError 32]`; no contract semantics were weakened.
 
 The deterministic suite verifies source form, V1 scope, lifecycle method coverage, source allowlisting, evidence/resolve separation, enum/evidence ownership guards, settlement terminality, and absence of external services. It is not a substitute for consensus integration.
@@ -52,3 +52,33 @@ Neither is a RESULTLINE deployment. A representative end-to-end agreement/freeze
 ## Known limitations
 
 The contract is intentionally contract-first and has not been canonically deployed. The source stores bounded rendered text directly, while redirect/status/header metadata remain unavailable. Comparative semantic resolution, correction-window re-resolution, and real two-account payable integration still require a subsequent test-only pass. The Windows `gltest` cleanup defect remains local tooling, not a contract failure.
+
+## Stage 2.1 Consensus Adjudication
+
+### Previous boundary: unsafe placeholder
+
+The previous public signature was `resolve(agreement_id, outcome, evidence_id)`. Any caller could supply a settlement enum; the contract did not invoke an LLM or comparative validator. This was an **UNSAFE PLACEHOLDER — NOT PRODUCTION ADJUDICATION**.
+
+### Verified comparative API
+
+The installed v0.6 RC library exposes `gl.eq_principle.prompt_comparative(fn, principle)`. The zero-argument callback produces the leader result; validators independently execute it and the runtime's `EqComparative` template compares leader and validator answers under the supplied principle. `prompt_non_comparative(fn, task=..., criteria=...)` is also verified and is now used for bounded evidence transcription.
+
+### New resolution flow
+
+`resolve(agreement_id)` is caller-triggered but caller cannot supply an outcome, reasoning, evidence ID, or replacement evidence. The contract builds context from frozen constitution/evidence only, invokes `gl.nondet.exec_prompt(..., response_format="json")` inside `prompt_comparative`, and validates the result before mutation.
+
+Required keys are `outcome`, `source_authority`, `event_status`, `temporal_validity`, `subject_match`, `category_match`, `evidence_sufficiency`, and `evidence_ids_relied_on`. Outcomes are exactly `CONFIRMED_TRUE`, `CONFIRMED_FALSE`, `UNRESOLVED`, or `INVALID_EVENT`. Unknown/malformed/duplicate/cross-agreement evidence IDs fail closed.
+
+The fixed instructions treat rendered material as untrusted data, ignore embedded prompts, forbid browsing/following links, odds, popularity, nominations, predictions, leaks, and invented facts, and distinguish insufficient evidence from false.
+
+### Evidence-freeze equivalence audit
+
+The previous raw-page `strict_eq` comparison was unsafe. `freeze_evidence` now uses verified `prompt_non_comparative` to produce a bounded factual transcription under fixed criteria. The stored value is capped at 512 characters; raw mutable page text is not strict-compared.
+
+### Atomicity and deadline
+
+Resolution, settlement, and withdrawal state are untouched until comparative adjudication and deterministic parsing succeed. Failed execution, malformed output, invalid evidence, or undetermined consensus leave frozen evidence and financial state unchanged. After the resolution deadline, `resolve(agreement_id)` records `UNRESOLVED` deterministically, enabling the refund branch.
+
+### Tests and remaining blocker
+
+The deterministic suite now reports **14 passing tests**. Read-only Studio Devnet schema compilation passes and exposes `resolve(agreement_id)` only. No real Studio Next semantic adjudication transaction has been submitted. The Windows direct runner still has `PermissionError [WinError 32]`; a second funded participant and real comparative/settlement integration remain before economic integration.
