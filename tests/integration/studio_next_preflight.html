@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Studio Next Read-Only Wallet Preflight</title>
+<style>body{font:16px system-ui;max-width:680px;margin:40px auto;padding:0 20px}button{font-size:18px;padding:12px 18px}dt{font-weight:700;margin-top:14px}dd{margin:4px 0;word-break:break-all}.ok{color:#087f23}.bad{color:#b00020}</style></head>
+<body><h1>Studio Next wallet preflight</h1><p>Read-only test page. No contract or transaction methods are present.</p>
+<button id="connect">Connect Wallet — Read Only</button><p id="status"></p><dl id="details"></dl>
+<script type="module">
+const TARGET=61997n, status=document.querySelector('#status'), details=document.querySelector('#details');
+const show=(label,value,cls='')=>{const d=document.createElement('div');d.innerHTML=`<dt>${label}</dt><dd class="${cls}">${value}</dd>`;details.append(d)};
+document.querySelector('#connect').addEventListener('click',async()=>{details.replaceChildren();try{if(!window.ethereum)throw Error('No EIP-1193 wallet provider found.');
+ const accounts=await window.ethereum.request({method:'eth_requestAccounts'}); const address=accounts?.[0]; if(!address)throw Error('No account was authorized.');
+ const chainHex=await window.ethereum.request({method:'eth_chainId'}); const chainId=BigInt(chainHex); const balanceHex=await window.ethereum.request({method:'eth_getBalance',params:[address,'latest']});
+ const balance=Number(BigInt(balanceHex))/1e18; const right=chainId===TARGET; status.textContent=right?'Connected — read-only checks complete.':'Wrong network — switch to Studio Dev (61997)'; status.className=right?'ok':'bad';
+ show('Public wallet address',address); show('Chain ID',chainId.toString(),right?'ok':'bad'); show('Chain check',right?'PASS — 61997':'FAIL — expected 61997',right?'ok':'bad'); show('Network','Studio Dev'); show('GEN balance',`${balance.toFixed(6)} GEN`);
+ }catch(e){status.textContent=e.message;status.className='bad';}});
+</script></body></html>
