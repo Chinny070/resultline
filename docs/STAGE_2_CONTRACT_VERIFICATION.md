@@ -115,3 +115,7 @@ The `.git` directory has an explicit Windows deny ACL for the repository SID, in
 Added the test-only harness `tests/integration/studio_next_eip1193.ts` and instructions in `tests/integration/README.md`. It requires a browser EIP-1193 provider, checks chain 61997 before writes, estimates fees with `estimateTransactionFeesForWrite`, submits `value` separately from `fees`, waits for finalization, and rejects identical participant accounts. It contains no secrets and does not execute transactions by itself.
 
 Interactive user action remains required: connect an authorized browser wallet on Studio-dev (chain 61997), then authorize Participant A and later a distinct Participant B. No deployment, create, match, evidence, resolution, settlement, or withdrawal has been attempted.
+
+## Stage 2.2C deployment postflight boundary
+
+The user-approved browser flow reported that the deployment request returned, but the runner did not preserve the returned transaction identifier. Read-only standard RPC inspection confirmed chain `61997` and the canonical Studio endpoint, but `eth_getBlockByNumber` exposes empty transaction lists on Studio Dev and therefore cannot identify this GenLayer deployment by sender alone. No transaction hash, receipt, execution status, consensus decision, finalization, deployed address, schema, or deployed-code identity is asserted here. No follow-up transaction was submitted.
