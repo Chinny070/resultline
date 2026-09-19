@@ -1,12 +1,13 @@
-# TEST-ONLY WEB-RENDER VERIFICATION CONTRACT
 # { "Depends": "py-genlayer:5jycge4q8k23462jtb0b9fyey1s9qz928sz2nbrd9mg4sxqg2qng" }
 
 import typing
 
-from genlayer import *
+import genlayer as gl
+
+# TEST-ONLY WEB-RENDER VERIFICATION CONTRACT
 
 
-class WebRenderVerification(gl.Contract):
+class WebRenderVerification(gl.contract.Contract):
     """Minimal probe for Studio Next web retrieval/render support.
 
     This contract has no RESULTLINE state, staking, settlement, or production

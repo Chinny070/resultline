@@ -281,6 +281,54 @@ The finalized receipt's leader execution result was `FINISHED_WITH_ERROR`, with 
 
 The deployment proves account/network/fee/lifecycle plumbing only; it does **not** prove GET or render behavior. No backend path, RESULTLINE state, frontend, or production contract was created. The remaining limitation is that the probe stores only booleans and does not expose raw content or metadata even if its runner is repaired.
 
+## Stage 1.4 Runner Diagnosis and Runtime Proof
+
+Stage 1.3 is preserved as **FAILED TEST-ONLY RUNTIME PROBE — INVALID CONTRACT / RUNNER MALFORMED**: transaction `0xc1a5e139046392b990bb5434e268e8250c6149a90f9ed4760ca98331fd9154e8`, address `0xf438ffc1E33dE40e7f0ee2f8f7bCE49E8A2c1B34`, finalized/accepted but `FINISHED_WITH_ERROR`.
+
+### Root cause and evidence
+
+The exact submitted bytes began with `# TEST-ONLY WEB-RENDER VERIFICATION CONTRACT`, so the JSON `Depends` header was not the first line. A read-only `gen_getContractSchemaForCode` comparison reproduced `invalid_contract runner malformed` for those bytes. Moving the header to byte zero caused Studio Next to load the declared runner and expose the next source error (`NameError: name 'gl' is not defined`). The cached/local standard library documents the current form as `import genlayer as gl` with `gl.contract.Contract`; the prior `from genlayer import *` / `gl.Contract` form was therefore not deployable on the current runtime. A second read-only schema check of the corrected artifact returned the four expected methods, proving runner resolution and source packaging before redeployment.
+
+The CLI deployment path was confirmed from the pinned `genlayer@0.40.0-rc.3` source: it reads raw UTF-8 source text and passes it as `client.deployContract({code: source, ...})`; no alternate packaging was required. The corrected source uses the same pinned dependency hash, with only header position, import, inheritance, and marker-comment placement corrected.
+
+### Corrected deployment
+
+- Sender: `0x3a3168d67a110de79461939047a8f7334ff1423d`
+- Fee estimate/deposit: `378625200010352` wei (~`0.000378625200010352 GEN`)
+- Deployment transaction: `0x97b0ced3754d7575ea934a1cc909fc94d63edf80597a8df3637c858ffea657c9`
+- Contract: `0xf0Ed635D8dE7Af93C4061d10caa587E3da3EAbf6`
+- Lifecycle: finalized / accepted; stored and projected lifecycle both `Finalized`, resolution `NoOp`
+- Execution: `FINISHED_WITH_RETURN`, leader `SUCCESS`, consensus majority agree
+- Schema and deployed code were retrieved successfully; schema contains `probe_get`, `probe_render_text`, `probe_render_html`, and read-only `show_probe_results`.
+
+### Runtime proof
+
+| Operation | Transaction / readback | Result |
+|---|---|---|
+| Initial state | authoritative `show_probe_results` | all three `false` |
+| GET | `0x0858059f6eed5f45da58e7b2d5f37823bc9c0f91df2825506660cc2d7c17cf59`; finalized, `FINISHED_WITH_RETURN`, majority agree | `get_text_match=true` after finality/readback |
+| render(text) | `0x431e80e1a3a31e53d9224152a473df06a41427220e0995d7ee830c040a460f0a`; finalized, `FINISHED_WITH_RETURN`, majority agree | `render_text_match=true` after finality/readback |
+| render(html) | `0x7efb528377b66346770740a2bc946e519390ba6aeb424b856a22740aea831a88`; finalized, `FINISHED_WITH_RETURN`, majority agree | call executed successfully but `render_html_match=false`; exact title predicate was not observed |
+| failure path | — | NOT TESTED: the existing probe has no invalid/unavailable URL method, and no extra deployment was authorized |
+
+All nondeterministic writes were checked through submission, consensus, finalized receipt, execution result, and authoritative state readback. The HTML operation is runtime-supported enough to execute, but this probe does not expose raw HTML, so the false predicate cannot distinguish representation differences from page-content differences.
+
+### Runtime metadata matrix
+
+| Field | Classification |
+|---|---|
+| submitted/original URL | VERIFIED EXPOSED in source (`https://example.com/`) |
+| final URL / redirect chain | NOT VERIFIED |
+| HTTP status / headers / content type | NOT VERIFIED |
+| GET body/text | VERIFIED indirectly: predicate became `true`; raw body not exposed |
+| rendered text | VERIFIED indirectly: predicate became `true`; raw text not exposed |
+| rendered HTML | VERIFIED operation executed; exact HTML/title content NOT VERIFIED |
+| error representation | NOT VERIFIED for unavailable/malformed URL |
+
+### Equivalence and architecture impact
+
+GET and text rendering now have real Studio Next consensus-backed proof. HTML rendering executes but the exact title predicate is false. The probe remains test-only, stores booleans only, and creates no RESULTLINE state, backend, frontend, staking, settlement, or production contract. The evidence architecture is unchanged; raw content and redirect/status metadata remain unexposed and must not be inferred. The Windows `gltest` direct-run limitation remains `PermissionError [WinError 32]` during temporary-stdin cleanup; `genvm-lint check` now passes lint and semantic validation.
+
 ## STAGE 2 REMAINS BLOCKED
 
 Do not start Stage 2. The authorized throwaway deployment finalized but failed with `invalid_contract runner malformed`; GET/render callable proof and failure-path proof therefore remain incomplete. No RESULTLINE production contract has been created and no further deployment is authorized in this stage.
