@@ -17,6 +17,8 @@ document.querySelector('#deploy').addEventListener('click',async()=>{try{if(!acc
  const source=await (await fetch('/contracts/resultline.py')).text(); const bytes=new TextEncoder().encode(source); const digest=await crypto.subtle.digest('SHA-1',new TextEncoder().encode(`blob ${bytes.length}\0`+source)); const hex=[...new Uint8Array(digest)].map(x=>x.toString(16).padStart(2,'0')).join(''); if(hex!==BLOB)throw Error(`Source blob mismatch: ${hex}`);
  const {createClient}=await import('https://esm.sh/genlayer-js@2.0.0-rc.1'); const {studioDevnet}=await import('https://esm.sh/genlayer-js@2.0.0-rc.1/chains'); const client=createClient({chain:studioDevnet,account,provider:window.ethereum}); const estimate=await client.estimateTransactionFees({});
  details.replaceChildren(); show('Connected address',account); show('Chain ID','61997','ok'); show('RPC',RPC); show('Source blob',BLOB,'ok'); show('Contract value','0'); show('Estimated protocol fee',`${estimate.feeValue} wei`); show('WARNING','REAL TEST-ONLY deployment transaction — review MetaMask manually before approving.'); status.textContent='Opening official GenLayerJS deployment confirmation…';
- await client.deployContract({account,code:source,fees:{distribution:estimate.distribution,feeValue:estimate.feeValue}}); status.textContent='Deployment request returned; no follow-up action is performed.';
+ // The RC client is configured with the EIP-1193 account; deployContract reads the
+ // sender from that client. Do not pass a second call-level account field.
+ await client.deployContract({code:source,args:[],fees:{distribution:estimate.distribution,feeValue:estimate.feeValue}}); status.textContent='Deployment request returned; no follow-up action is performed.';
  }catch(e){status.textContent=e.message;status.className='bad';}});
 </script></body></html>
