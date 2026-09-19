@@ -1,15 +1,22 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Studio Next Read-Only Wallet Preflight</title>
 <style>body{font:16px system-ui;max-width:680px;margin:40px auto;padding:0 20px}button{font-size:18px;padding:12px 18px}dt{font-weight:700;margin-top:14px}dd{margin:4px 0;word-break:break-all}.ok{color:#087f23}.bad{color:#b00020}</style></head>
-<body><h1>Studio Next wallet preflight</h1><p>Read-only test page. No contract or transaction methods are present.</p>
-<button id="connect">Connect Wallet — Read Only</button><p id="status"></p><dl id="details"></dl>
+<body><h1>Studio Next wallet preflight</h1><p>Read-only checks and a separately gated TEST-ONLY deployment preparation action.</p>
+<button id="connect">Connect Wallet — Read Only</button><section><h2>TEST-ONLY RESULTLINE INTEGRATION DEPLOYMENT</h2><button id="deploy" disabled>Prepare TEST-ONLY RESULTLINE Deployment</button><p><strong>Warning:</strong> this prepares a real deployment transaction in MetaMask. Review it manually; never approve automatically.</p></section><p id="status"></p><dl id="details"></dl>
 <script type="module">
-const TARGET=61997n, status=document.querySelector('#status'), details=document.querySelector('#details');
+const TARGET=61997n, EXPECTED='0xaffe15eec45b68835cc9e5b4ab85dd5deae8e70b', BLOB='ef197b26642e408b2e4aa31181ffcf06c7d95dd9', RPC='https://studio-dev.genlayer.com/api', status=document.querySelector('#status'), details=document.querySelector('#details'); let account;
 const show=(label,value,cls='')=>{const d=document.createElement('div');d.innerHTML=`<dt>${label}</dt><dd class="${cls}">${value}</dd>`;details.append(d)};
 document.querySelector('#connect').addEventListener('click',async()=>{details.replaceChildren();try{if(!window.ethereum)throw Error('No EIP-1193 wallet provider found.');
- const accounts=await window.ethereum.request({method:'eth_requestAccounts'}); const address=accounts?.[0]; if(!address)throw Error('No account was authorized.');
+ const accounts=await window.ethereum.request({method:'eth_requestAccounts'}); const address=accounts?.[0]; if(!address)throw Error('No account was authorized.'); account=address;
  const chainHex=await window.ethereum.request({method:'eth_chainId'}); const chainId=BigInt(chainHex); const balanceHex=await window.ethereum.request({method:'eth_getBalance',params:[address,'latest']});
- const balance=Number(BigInt(balanceHex))/1e18; const right=chainId===TARGET; status.textContent=right?'Connected — read-only checks complete.':'Wrong network — switch to Studio Dev (61997)'; status.className=right?'ok':'bad';
+ const balance=Number(BigInt(balanceHex))/1e18; const right=chainId===TARGET; status.textContent=right?'Connected — read-only checks complete.':'Wrong network — switch to Studio Dev (61997)'; status.className=right?'ok':'bad'; document.querySelector('#deploy').disabled=!(right&&address.toLowerCase()===EXPECTED);
  show('Public wallet address',address); show('Chain ID',chainId.toString(),right?'ok':'bad'); show('Chain check',right?'PASS — 61997':'FAIL — expected 61997',right?'ok':'bad'); show('Network','Studio Dev'); show('GEN balance',`${balance.toFixed(6)} GEN`);
+ show('Deployment account gate',address.toLowerCase()===EXPECTED?'PASS — MetaMask Participant A':'FAIL — deployment requires corrected Participant A',address.toLowerCase()===EXPECTED?'ok':'bad');
+ }catch(e){status.textContent=e.message;status.className='bad';}});
+document.querySelector('#deploy').addEventListener('click',async()=>{try{if(!account||account.toLowerCase()!==EXPECTED)throw Error('Connect the corrected Participant A wallet first.'); const chain=BigInt(await window.ethereum.request({method:'eth_chainId'})); if(chain!==TARGET)throw Error('Wrong network — switch to Studio Dev (61997).');
+ const source=await (await fetch('/contracts/resultline.py')).text(); const bytes=new TextEncoder().encode(source); const digest=await crypto.subtle.digest('SHA-1',new TextEncoder().encode(`blob ${bytes.length}\\0`+source)); const hex=[...new Uint8Array(digest)].map(x=>x.toString(16).padStart(2,'0')).join(''); if(hex!==BLOB)throw Error(`Source blob mismatch: ${hex}`);
+ const {createClient}=await import('https://esm.sh/genlayer-js@2.0.0-rc.1'); const {studioDevnet}=await import('https://esm.sh/genlayer-js@2.0.0-rc.1/chains'); const client=createClient({chain:studioDevnet,account,provider:window.ethereum}); const estimate=await client.estimateTransactionFees({});
+ details.replaceChildren(); show('Connected address',account); show('Chain ID','61997','ok'); show('RPC',RPC); show('Source blob',BLOB,'ok'); show('Contract value','0'); show('Estimated protocol fee',`${estimate.feeValue} wei`); show('WARNING','REAL TEST-ONLY deployment transaction — review MetaMask manually before approving.'); status.textContent='Opening official GenLayerJS deployment confirmation…';
+ await client.deployContract({account,code:source,fees:{distribution:estimate.distribution,feeValue:estimate.feeValue}}); status.textContent='Deployment request returned; no follow-up action is performed.';
  }catch(e){status.textContent=e.message;status.className='bad';}});
 </script></body></html>
