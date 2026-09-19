@@ -329,6 +329,33 @@ All nondeterministic writes were checked through submission, consensus, finalize
 
 GET and text rendering now have real Studio Next consensus-backed proof. HTML rendering executes but the exact title predicate is false. The probe remains test-only, stores booleans only, and creates no RESULTLINE state, backend, frontend, staking, settlement, or production contract. The evidence architecture is unchanged; raw content and redirect/status metadata remain unexposed and must not be inferred. The Windows `gltest` direct-run limitation remains `PermissionError [WinError 32]` during temporary-stdin cleanup; `genvm-lint check` now passes lint and semantic validation.
 
-## STAGE 2 REMAINS BLOCKED
+## Stage 1.5 Fail-Closed Runtime Proof
+
+The Stage 1.4 probe schema had no method capable of exercising an unavailable or malformed source, so a minimal revised test-only probe was required. The successful GET, text-render, and HTML methods were unchanged. The added `probe_unavailable_source` method calls `gl.nondet.web.get("https://resultline-stage1.invalid/")` inside `gl.eq_principle.strict_eq` and never assigns a boolean or failure marker.
+
+### Revised deployment
+
+- Contract: `0x4573555cec78F641526fa15154E4372c526Cdcd7`
+- Deployment tx: `0x41ffe3fe5b5b04874d7fc098602bbc9adcbc998d32cd20e7409b841655d1e7bc`
+- Fee deposit: `100000000000010352` wei
+- Lifecycle: finalized / accepted; execution `FINISHED_WITH_RETURN`; schema exposes five methods including `probe_unavailable_source`
+- Initial authoritative state: all three semantic booleans `false`
+
+### Failure transaction
+
+- Method: `probe_unavailable_source`
+- Input: `https://resultline-stage1.invalid/` (deliberately unavailable reserved test domain)
+- Fee preset used: `377664000010352` wei; the targeted simulator itself returned the expected retrieval execution error and recommended this preset
+- Tx: `0xbc76f56c5d457ea733357ce63e1b42384cb7f4125b6f52679fac6a1805b478f1`
+- Lifecycle: finalized / accepted; stored and projected lifecycle `Finalized`, resolution `NoOp`
+- Execution: `FINISHED_WITH_ERROR`; leader result `contract_error`, payload `exit_code 1`; consensus result `MAJORITY_AGREE`
+
+Authoritative post-failure readback on the revised contract remained `{get_text_match: false, render_text_match: false, render_html_match: false}`. No TRUE/FALSE evidence was created by the failed retrieval. The prior successful deployment remained intact and read back `{get_text_match: true, render_text_match: true, render_html_match: false}`. This establishes fail-closed behavior: **WEB RETRIEVAL/RENDER FAILURE != CONFIRMED_TRUE and WEB RETRIEVAL/RENDER FAILURE != CONFIRMED_FALSE.**
+
+### HTML and final Stage 1 lock
+
+HTML execution remains non-blocking for RESULTLINE V1: it finalized successfully in Stage 1.4 but the exact title predicate was false and raw HTML was not exposed. V1 therefore uses `gl.nondet.web.render(..., mode="text")` as its primary evidence path; `gl.nondet.web.get` is permitted for stable static sources. The dependency header is byte-zero/first-line, imports use `genlayer as gl`, inheritance uses `gl.contract.Contract`, and failed evidence never maps directly to `CONFIRMED_FALSE`. Finality requires execution result + consensus/finality + authoritative state reread. Freeze and semantic resolution remain separate transactions, with structured comparative validation for settlement. Final URL, redirects, status, headers, content type, raw HTML, and detailed error representation remain unavailable unless directly observed.
+
+## READY FOR STAGE 2
 
 Do not start Stage 2. The authorized throwaway deployment finalized but failed with `invalid_contract runner malformed`; GET/render callable proof and failure-path proof therefore remain incomplete. No RESULTLINE production contract has been created and no further deployment is authorized in this stage.
