@@ -82,3 +82,36 @@ Resolution, settlement, and withdrawal state are untouched until comparative adj
 ### Tests and remaining blocker
 
 The deterministic suite now reports **14 passing tests**. Read-only Studio Devnet schema compilation passes and exposes `resolve(agreement_id)` only. No real Studio Next semantic adjudication transaction has been submitted. The Windows direct runner still has `PermissionError [WinError 32]`; a second funded participant and real comparative/settlement integration remain before economic integration.
+
+## Stage 2.2 Integration boundary (2026-09-19)
+
+The pinned `genlayer@0.40.0-rc.3` CLI was audited before any deployment. Its `write` implementation constructs the transaction with `value: 0n` and exposes only protocol fee options (`--fees` / `--fee-value`); it has no payable-value option. RESULTLINE `create(...)` requires a non-zero payable stake, so the official CLI cannot submit the first agreement without bypassing the pinned path or exposing a private signing implementation. No Stage 2.2 deployment or transaction was made.
+
+Non-mutating checks remain green: 14 deterministic tests, `genvm-lint lint`, and `genvm-lint check`. The configured Studio-dev account audit found funded named keystores, but the payable-value limitation is the first integration blocker. No frontend, backend, database, indexer, oracle, canonical deployment, or production RESULTLINE contract was created.
+
+## Stage 2.2A Payable SDK Integration
+
+The explicitly pinned packages were inspected from temporary tarballs: `genlayer-js@2.0.0-rc.1` and `@genlayer/transaction-kit@0.1.0-rc.2`. The official GenLayerJS type surface supports the required separation:
+
+```ts
+const fees = await client.estimateTransactionFeesForWrite({
+  account, address, functionName, args,
+});
+const txHash = await client.writeContract({
+  account, address, functionName, args,
+  value: stake,
+  fees: { distribution: fees.distribution, messageAllocations: fees.messageAllocations, feeValue: fees.feeValue },
+});
+```
+
+`value` is payable contract value; `fees` is protocol/consensus funding. The write client uses an EIP-1193 provider and an authorized public account, then `waitForTransactionReceipt` awaits the requested decision/finalization status. Transaction Kit `0.1.0-rc.2` likewise submits `value: quote.userValue` separately from `fees` through its provider-backed flow.
+
+The repository has no installed pinned SDK, no EIP-1193 provider for either configured keystore, and no safe official adapter that exposes those CLI-managed accounts to GenLayerJS. The CLI itself hardcodes `value: 0n`. Consequently no harness, deployment, payable create, or payable match was run, and Stage 2 remains blocked at account authorization/provider setup—not at RESULTLINE economics.
+
+## Stage 2.2B EIP-1193 Integration Preparation
+
+The `.git` directory has an explicit Windows deny ACL for the repository SID, including write/delete rights on `.git/index` and its children. No stale lock or active Git process exists. A harmless write inside `.git` is denied; the smallest safe repair is for the repository owner/administrator to remove only that explicit deny ACE (or grant the current user Modify on `.git`), then re-run Git. No ACL was changed by this task. `.pytest_cache` is likewise inaccessible and was left untouched.
+
+Added the test-only harness `tests/integration/studio_next_eip1193.ts` and instructions in `tests/integration/README.md`. It requires a browser EIP-1193 provider, checks chain 61997 before writes, estimates fees with `estimateTransactionFeesForWrite`, submits `value` separately from `fees`, waits for finalization, and rejects identical participant accounts. It contains no secrets and does not execute transactions by itself.
+
+Interactive user action remains required: connect an authorized browser wallet on Studio-dev (chain 61997), then authorize Participant A and later a distinct Participant B. No deployment, create, match, evidence, resolution, settlement, or withdrawal has been attempted.
