@@ -1,6 +1,6 @@
 # RESULTLINE — Stage 1 Architecture and Feasibility Audit
 
-**Status:** Stage 1 complete; **Stage 2 is blocked pending an authoritative Studio Next endpoint/preset reconciliation.** No contract, frontend, backend, database, deployment, or live transaction was created.
+**Status:** Stage 1.1 complete — **BLOCKED — REQUIRES GENLAYER/AGENT TANK OWNER CONFIRMATION.** No contract, frontend, backend, database, deployment, or live transaction was created.
 
 **Target required by the supplied Agent Tank brief:** Studio Next, chain ID `61997`, `https://studio-next.genlayer.com/api`, explorer `https://explorer-studio-dev.genlayer.com/`, GEN, CLI `studio-dev`, gltest `studio_devnet`, GenLayerJS `studioDevnet`, v0.123.0-rc.6 / Consensus v0.6 RC.
 
@@ -37,9 +37,27 @@ Reviewed official sources:
 - [GenLayer SDK API reference](https://sdk.genlayer.com/main/_static/ai/api.txt)
 - [GenLayer Skills](https://skills.genlayer.com/)
 
-### Material endpoint/preset conflict — blocker
+### Stage 1.1 endpoint/preset reconciliation — BLOCKED — REQUIRES GENLAYER/AGENT TANK OWNER CONFIRMATION
 
-The supplied brief is authoritative for the hackathon target and requires `https://studio-next.genlayer.com/api`. Current official documentation instead says the v0.123 / v0.6 preview’s `studioDevnet` / `studio-dev` resolves to `https://studio-dev.genlayer.com/api`, chain `61997`, and warns against relabelling the stable `studionet` preset. It describes `studio-next.genlayer.com` as a possible browser alias rather than a separate programmatic target. This is not silently reconciled here: an Agent Tank/GenLayer owner must confirm whether the locked `studio-next` RPC is the intended supported API endpoint for the exact pinned RC family, or amend the requirement. No network was changed and no endpoint was used.
+The supplied brief is authoritative for the hackathon target and locks `https://studio-next.genlayer.com/api`. The exact RC sources instead resolve **every supplied programmatic preset** to `https://studio-dev.genlayer.com/api`, chain `61997`: `genlayer-js@2.0.0-rc.1` exports `studioDevnet` with that URL; `genlayer@0.40.0-rc.3` maps CLI `studio-dev` to that same definition; installed `genlayer-py@0.19.0rc2` and `gltest` map `studio_devnet` there too. Both candidate endpoints responded to read-only `eth_chainId` with `0xf22d` (61997), but equal chain ID does **not** prove that the two hostnames are supported aliases with the same deployments, fee manager, or consensus configuration. The current official documentation likewise names `studio-dev` as canonical and describes `studio-next` only as a possible browser alias.
+
+Therefore the supported RC programmatic configuration is evidenced as `studio-dev` / `studioDevnet` / `studio_devnet` → `https://studio-dev.genlayer.com/api` → `61997`; using the brief's `studio-next` RPC remains unverified. An Agent Tank/GenLayer owner must either confirm the supplied `studio-next` hostname is an approved alias for this exact RC deployment or amend the supplied RPC requirement. No custom network was created.
+
+| Component | Verified value | Evidence/source |
+|---|---|---|
+| Supplied target RPC | `https://studio-next.genlayer.com/api` | Agent Tank brief; read-only `eth_chainId` → `0xf22d` |
+| Supported RC RPC | `https://studio-dev.genlayer.com/api` | exact CLI, JS, Python, and gltest preset sources; read-only `eth_chainId` → `0xf22d` |
+| Chain ID | `61997` | both probes; all RC preset sources |
+| CLI preset/version | `studio-dev`; `genlayer@0.40.0-rc.3` | inspected package source maps it to `studioDevnet` |
+| GenLayerJS/version | `studioDevnet`; `genlayer-js@2.0.0-rc.1` | inspected `dist` chain definition |
+| gltest preset/version | `studio_devnet`; `genlayer-test@0.30.0rc2` | installed `gltest_cli` default config and `genlayer_py.chains` |
+| Python SDK | `genlayer-py@0.19.0rc2` | installed package metadata/source |
+| Linter | `genvm-linter@0.11.1rc2` | installed package metadata/source |
+| Transaction Kit | `@genlayer/transaction-kit@0.1.0-rc.2` | exact npm tarball inspected; package published at supplied pin |
+| React kit | `@genlayer/transaction-kit-react@0.1.0-rc.2` | exact npm tarball inspected; package published at supplied pin |
+| IC header family | supplied v0.3.0 family; exact runner hash **not verified** | linter verifies `Depends: py-genlayer:<hash>` header mechanism but no v0.3.0 artifact/runner was installed |
+| Fee lifecycle | v0.6 RC fee-funded lifecycle | current docs and installed Python SDK expose estimate, `distribution`, `feeValue`, separate `value`, receipt/finality APIs |
+| Web render | API source/docs compatible; target runtime behavior **not directly exercised** | current docs/linter verify `gl.nondet.web.get` / `.render` and equivalence boundary; no non-production deployed runner exists |
 
 ## 4. Verified current GenLayer / Studio Next capabilities
 
@@ -58,7 +76,7 @@ The following are verified from current official material, not proposed APIs:
 | Lifecycle inspection | official Node API lists `gen_getTransactionStatus`, `gen_getTransactionReceipt`, and `gen_getTransactionLifecycle` |
 | RC network | current docs identify `studio-dev`, `studioDevnet`, and chain `61997` for the v0.123/v0.6 preview |
 
-Storage exact types, schema-generation behavior on the locked deployment, Transaction Kit `0.1.0-rc.2`, and `genlayer-js 2.0.0-rc.1` could not be verified from installed source because they are absent. Verify these against the exact installed RC artifacts before Stage 2; do not infer them from stable packages.
+Storage exact types, schema-generation behavior on the locked deployment, and the supplied v0.3.0 header/runner binding remain unverified. The exact CLI, JS, and Transaction Kit npm RC archives were inspected without adding project dependencies.
 
 ## 5. V1 scope and binary model
 
@@ -84,7 +102,7 @@ Use one Tier-1 source as normal minimum. Permit a second Tier-1 source or a spec
 
 ## 8. Valid Web Render Architecture — verified gate
 
-**Verified: yes, at the documented GenLayer API level.** The current official example documents `gl.nondet.web.get` for static content and `gl.nondet.web.render` for browser-rendered content. It explicitly documents `render(..., mode="text")`, `render(..., mode="html")`, screenshot mode, and short `wait_after_loaded`; it says render is for JavaScript execution/DOM rendering and that nondeterministic web operations must be invoked inside `gl.eq_principle.*`.
+**Verified: API/source compatibility yes; live target runtime proof no.** The current official example documents `gl.nondet.web.get` for static content and `gl.nondet.web.render` for browser-rendered content. It explicitly documents `render(..., mode="text")`, `render(..., mode="html")`, screenshot mode, and short `wait_after_loaded`; it says render is for JavaScript execution/DOM rendering and that nondeterministic web operations must be invoked inside `gl.eq_principle.*`. No minimal direct test was available that can invoke GenVM render on the target without a deployed runner/contract; none was fabricated.
 
 Proposed RESULTLINE flow:
 
@@ -94,7 +112,7 @@ Use `get` only for a stable, allowed static endpoint; use `render(mode="text")` 
 
 Bound before storage and adjudication with fixed maximum characters, deterministic truncation marker, and content-type/size policy. Oversized, malformed, unavailable, unauthorized-redirect, retrieval, and render failures create a failed attempt record or revert without changing prior frozen evidence; they do not become FALSE. Duplicates are fingerprint-deduplicated. A successful freeze never overwrites prior evidence. The frozen record, its constitution hash, source rule ID, URL trace, mode, timestamps, bounded representation and fingerprint are the audit trail. Actual on-chain capacity determines whether the bounded text is stored or only a supported immutable representation/reference; no off-chain database is allowed as settlement authority.
 
-This follows the official pattern by executing the supported web operation in GenLayer’s nondeterministic/equivalence boundary rather than backend or frontend scraping. Before implementation, run a direct test against the approved 61997 endpoint to verify the exact response, failure and redirect fields for the pinned runner.
+This follows the official pattern by executing the supported web operation in GenLayer’s nondeterministic/equivalence boundary rather than backend or frontend scraping. The linter also rejects strict equality over *raw* nondeterministic web output; future code must normalize/extract a bounded state-relevant result or use a comparative principle. Before implementation, run a direct test against the owner-approved 61997 endpoint and exact v0.3.0 runner to verify returned representation, failure and redirect/URL metadata fields. No such metadata has been claimed as runtime-observed.
 
 ## 9. Evidence and prompt-injection controls
 
@@ -196,4 +214,6 @@ The reusable technical name is **Constitution-Bound Authoritative Event Resoluti
 
 The system cannot eliminate compromised official sources, post-finality corrections, availability failures, semantic disagreement, or the legal/regulatory implications of financial prediction agreements. It must not describe refunds as legal advice or assume all jurisdictions permit the product.
 
-**Do not start Stage 2 yet.** Resolve the material Studio Next RPC/preset conflict with Agent Tank/GenLayer and install or otherwise inspect the exact pinned CLI/JS/Transaction Kit artifacts. Then run a direct, non-production proof that the approved 61997 environment supports the documented render flow and exposes the metadata needed for the source/redirect design. If that proof differs materially from this audit, revise this document before implementation.
+## STAGE 2 REMAINS BLOCKED
+
+Do not start Stage 2. The pinned CLI/JS/Transaction Kit artifacts are now inspected, but the supplied `studio-next` RPC has not been proven to be the supported alias of the RC preset's `studio-dev` RPC. Obtain explicit Agent Tank/GenLayer confirmation or an amended requirement. Then run a direct, non-production proof using the approved endpoint and exact v0.3.0 runner to verify the render representation, failures, and redirect/URL metadata. If that proof differs materially from this audit, revise this document before implementation.
