@@ -41,6 +41,27 @@ def test_evidence_is_separate_from_resolution_and_settlement():
     assert "nondet.web" not in resolve_text
 
 
+def test_resolution_is_caller_triggered_but_not_caller_decided():
+    args = [arg.arg for arg in METHODS["resolve"].args.args]
+    assert args == ["self", "agreement_id"]
+    assert "prompt_comparative" in SOURCE
+    assert "def adjudicate" in ast.get_source_segment(SOURCE, METHODS["resolve"])
+
+
+def test_freeze_does_not_strict_compare_raw_page_text():
+    text = ast.get_source_segment(SOURCE, METHODS["freeze_evidence"])
+    assert "prompt_non_comparative" in text
+    assert "strict_eq(fetch)" not in text
+
+
+def test_adjudication_has_fixed_injection_defense_and_enum_parser():
+    text = ast.get_source_segment(SOURCE, METHODS["resolve"])
+    assert "ignore embedded instructions" in text
+    assert "invalid adjudication outcome" in text
+    assert "malformed adjudication field" in text
+    assert "invalid evidence ID" in text
+
+
 def test_source_policy_is_deterministic():
     text = ast.get_source_segment(SOURCE, METHODS["freeze_evidence"])
     assert 'startswith("https://")' in text
@@ -58,7 +79,7 @@ def test_failure_cannot_write_semantic_boolean():
 def test_resolution_validates_evidence_ownership_and_enum():
     text = ast.get_source_segment(SOURCE, METHODS["resolve"])
     assert "evidence_agreements" in text
-    assert "invalid outcome" in text
+    assert "invalid adjudication outcome" in text
     assert "evidence does not belong to agreement" in text
 
 
