@@ -1,6 +1,6 @@
 # RESULTLINE — Stage 1 Architecture and Feasibility Audit
 
-**Status:** Stage 1.1 complete — **BLOCKED — REQUIRES GENLAYER/AGENT TANK OWNER CONFIRMATION.** No contract, frontend, backend, database, deployment, or live transaction was created.
+**Status:** Stage 1.2 complete — **Studio Next configuration resolved; Stage 2 remains blocked pending a real test-only GenVM render proof.** No RESULTLINE contract, frontend, backend, database, deployment, or live transaction was created.
 
 **Target required by the supplied Agent Tank brief:** Studio Next, chain ID `61997`, `https://studio-next.genlayer.com/api`, explorer `https://explorer-studio-dev.genlayer.com/`, GEN, CLI `studio-dev`, gltest `studio_devnet`, GenLayerJS `studioDevnet`, v0.123.0-rc.6 / Consensus v0.6 RC.
 
@@ -37,16 +37,16 @@ Reviewed official sources:
 - [GenLayer SDK API reference](https://sdk.genlayer.com/main/_static/ai/api.txt)
 - [GenLayer Skills](https://skills.genlayer.com/)
 
-### Stage 1.1 endpoint/preset reconciliation — BLOCKED — REQUIRES GENLAYER/AGENT TANK OWNER CONFIRMATION
+### Stage 1.2 endpoint/preset reconciliation — RESOLVED — VERIFIED STUDIO NEXT / 61997 CONFIGURATION
 
 The supplied brief is authoritative for the hackathon target and locks `https://studio-next.genlayer.com/api`. The exact RC sources instead resolve **every supplied programmatic preset** to `https://studio-dev.genlayer.com/api`, chain `61997`: `genlayer-js@2.0.0-rc.1` exports `studioDevnet` with that URL; `genlayer@0.40.0-rc.3` maps CLI `studio-dev` to that same definition; installed `genlayer-py@0.19.0rc2` and `gltest` map `studio_devnet` there too. Both candidate endpoints responded to read-only `eth_chainId` with `0xf22d` (61997), but equal chain ID does **not** prove that the two hostnames are supported aliases with the same deployments, fee manager, or consensus configuration. The current official documentation likewise names `studio-dev` as canonical and describes `studio-next` only as a possible browser alias.
 
-Therefore the supported RC programmatic configuration is evidenced as `studio-dev` / `studioDevnet` / `studio_devnet` → `https://studio-dev.genlayer.com/api` → `61997`; using the brief's `studio-next` RPC remains unverified. An Agent Tank/GenLayer owner must either confirm the supplied `studio-next` hostname is an approved alias for this exact RC deployment or amend the supplied RPC requirement. No custom network was created.
+Authoritative clarification resolves the naming issue: **Studio Next** is the public/hackathon environment name, while `studio-dev` / `studioDevnet` / `studio_devnet` are its matching RC programmatic presets. The canonical programmatic target is `https://studio-dev.genlayer.com/api`, chain `61997`. `studio-next.genlayer.com` must not be configured as the programmatic RPC unless official guidance changes. No custom network was created.
 
 | Component | Verified value | Evidence/source |
 |---|---|---|
-| Supplied target RPC | `https://studio-next.genlayer.com/api` | Agent Tank brief; read-only `eth_chainId` → `0xf22d` |
-| Supported RC RPC | `https://studio-dev.genlayer.com/api` | exact CLI, JS, Python, and gltest preset sources; read-only `eth_chainId` → `0xf22d` |
+| Public/hackathon environment | Studio Next | authoritative Agent Tank clarification |
+| Canonical programmatic RPC | `https://studio-dev.genlayer.com/api` | authoritative clarification; exact CLI, JS, Python, and gltest preset sources; read-only `eth_chainId` → `0xf22d` |
 | Chain ID | `61997` | both probes; all RC preset sources |
 | CLI preset/version | `studio-dev`; `genlayer@0.40.0-rc.3` | inspected package source maps it to `studioDevnet` |
 | GenLayerJS/version | `studioDevnet`; `genlayer-js@2.0.0-rc.1` | inspected `dist` chain definition |
@@ -55,7 +55,7 @@ Therefore the supported RC programmatic configuration is evidenced as `studio-de
 | Linter | `genvm-linter@0.11.1rc2` | installed package metadata/source |
 | Transaction Kit | `@genlayer/transaction-kit@0.1.0-rc.2` | exact npm tarball inspected; package published at supplied pin |
 | React kit | `@genlayer/transaction-kit-react@0.1.0-rc.2` | exact npm tarball inspected; package published at supplied pin |
-| IC header family | supplied v0.3.0 family; exact runner hash **not verified** | linter verifies `Depends: py-genlayer:<hash>` header mechanism but no v0.3.0 artifact/runner was installed |
+| IC header/runner | `# { "Depends": "py-genlayer:5jycge4q8k23462jtb0b9fyey1s9qz928sz2nbrd9mg4sxqg2qng" }` | installed linter's cached GenVM v0.6.0-rc5 index and exact runner manifest |
 | Fee lifecycle | v0.6 RC fee-funded lifecycle | current docs and installed Python SDK expose estimate, `distribution`, `feeValue`, separate `value`, receipt/finality APIs |
 | Web render | API source/docs compatible; target runtime behavior **not directly exercised** | current docs/linter verify `gl.nondet.web.get` / `.render` and equivalence boundary; no non-production deployed runner exists |
 
@@ -76,7 +76,7 @@ The following are verified from current official material, not proposed APIs:
 | Lifecycle inspection | official Node API lists `gen_getTransactionStatus`, `gen_getTransactionReceipt`, and `gen_getTransactionLifecycle` |
 | RC network | current docs identify `studio-dev`, `studioDevnet`, and chain `61997` for the v0.123/v0.6 preview |
 
-Storage exact types, schema-generation behavior on the locked deployment, and the supplied v0.3.0 header/runner binding remain unverified. The exact CLI, JS, and Transaction Kit npm RC archives were inspected without adding project dependencies.
+The exact header syntax is a single `Depends` JSON comment. The cached selected `py-genlayer` runner manifest is sequence-form internally and supplies `py-lib-genlayer-std`, `py-lib-cloudpickle`, and CPython itself; RESULTLINE must not add those dependencies, nor embeddings, unless a later feature actually requires them. The exact CLI, JS, and Transaction Kit npm RC archives were inspected without adding project dependencies.
 
 ## 5. V1 scope and binary model
 
@@ -108,11 +108,11 @@ Proposed RESULTLINE flow:
 
 `frozen source rule → permitted candidate URL → GenLayer render(text by default; html only when needed) → bounded untrusted evidence → deterministic eligibility checks → equivalence-protected freeze → committed evidence metadata/fingerprint → semantic adjudication → deterministic validation → settlement`.
 
-Use `get` only for a stable, allowed static endpoint; use `render(mode="text")` for result pages that need a browser. Rendered HTML is reserved for a documented extraction need. The render result is evidence, not settlement authority by itself. Preserve original and final URL, redirect-chain summary if exposed by the verified API, host, source ID/tier, retrieval/render mode, attempt time, status/error category, bounded canonical evidence text, byte/character lengths, and a deterministic fingerprint of the stored bounded representation. Do not claim headers, redirect metadata, or hashing helpers are available until the RC source confirms them.
+Use `get` only for a stable, allowed static endpoint; use `render(mode="text")` for result pages that need a browser. Rendered HTML is reserved for a documented extraction need. The render result is evidence, not settlement authority by itself. Preserve the submitted URL, source ID/tier, retrieval/render mode, attempt time, bounded canonical evidence text, byte/character lengths, and a deterministic fingerprint of the stored bounded representation. **Final URL, redirect chain, HTTP status, headers, and content type are NOT EXPOSED / NOT VERIFIED from the exact runtime.** Until a target-runtime proof exposes them, V1 source rules must reject any candidate URL that redirects or whose approved identity cannot be established from the submitted URL alone; they must not pretend to validate redirect hops.
 
 Bound before storage and adjudication with fixed maximum characters, deterministic truncation marker, and content-type/size policy. Oversized, malformed, unavailable, unauthorized-redirect, retrieval, and render failures create a failed attempt record or revert without changing prior frozen evidence; they do not become FALSE. Duplicates are fingerprint-deduplicated. A successful freeze never overwrites prior evidence. The frozen record, its constitution hash, source rule ID, URL trace, mode, timestamps, bounded representation and fingerprint are the audit trail. Actual on-chain capacity determines whether the bounded text is stored or only a supported immutable representation/reference; no off-chain database is allowed as settlement authority.
 
-This follows the official pattern by executing the supported web operation in GenLayer’s nondeterministic/equivalence boundary rather than backend or frontend scraping. The linter also rejects strict equality over *raw* nondeterministic web output; future code must normalize/extract a bounded state-relevant result or use a comparative principle. Before implementation, run a direct test against the owner-approved 61997 endpoint and exact v0.3.0 runner to verify returned representation, failure and redirect/URL metadata fields. No such metadata has been claimed as runtime-observed.
+This follows the official pattern by executing the supported web operation in GenLayer’s nondeterministic/equivalence boundary rather than backend or frontend scraping. The linter also rejects strict equality over *raw* nondeterministic web output; future code must normalize/extract a bounded state-relevant result or use a comparative principle. Before implementation, run a direct test against Studio Next / 61997 and the exact pinned runner to verify returned representation, failure behavior, and whether any redirect/URL metadata exists. No such metadata has been claimed as runtime-observed.
 
 ## 9. Evidence and prompt-injection controls
 
@@ -212,8 +212,40 @@ The reusable technical name is **Constitution-Bound Authoritative Event Resoluti
 
 ## 21. Known limitations and Stage 2 recommendation
 
+## Stage 1.2 Runtime Verification
+
+### Canonical Studio Next configuration
+
+Studio Next is the Agent Tank public/hackathon environment. Its canonical RC programmatic configuration is: CLI `studio-dev`; GenLayerJS `studioDevnet`; gltest `studio_devnet`; RPC `https://studio-dev.genlayer.com/api`; chain ID `61997`. This is the required target, not a separate `studio-dev` deployment. Studionet / `61999` and `studio-next.genlayer.com` as an active programmatic RPC are prohibited.
+
+### Pinned runner and header
+
+The exact installed GenVM v0.6.0-rc5 artifact index contains `py-genlayer:5jycge4q8k23462jtb0b9fyey1s9qz928sz2nbrd9mg4sxqg2qng`. Its runner manifest confirms that the contract header is exactly:
+
+```python
+# { "Depends": "py-genlayer:5jycge4q8k23462jtb0b9fyey1s9qz928sz2nbrd9mg4sxqg2qng" }
+```
+
+The runner internally includes standard-library, cloudpickle and CPython dependencies. A RESULTLINE contract should use the single `py-genlayer` header and add neither embeddings nor `latest` dependencies unless separately required and verified.
+
+### Verified web APIs and equivalence
+
+The current official documentation and installed linter verify `gl.nondet.web.get(url)` and `gl.nondet.web.render(url, mode="text")`; `mode="html"` and `wait_after_loaded="5s"` are documented for rendered pages. These operations must execute in a zero-argument function called through `gl.eq_principle.*`; storage is inaccessible inside that block. The linter flags strict equality over raw web output. For evidence freeze, use strict equality only for a small deterministic normalized predicate/extraction that direct tests prove stable; otherwise use `gl.eq_principle.prompt_comparative` with fixed source rules and a precise equivalence principle. For semantic resolution, use comparative validation—leader and validators evaluate the same frozen constitution/evidence and require the state-relevant enum outcome and evidence IDs to agree. `prompt_non_comparative` is available but is not the recommended V1 settlement path unless validators can independently verify the leader output against frozen evidence.
+
+### Real runtime render result and metadata
+
+**No real Studio Next GenVM render transaction was completed.** A test-only contract would require a configured, funded Studio Next account; none is configured in this workspace, and no account, faucet request, deployment, or transaction was created. Thus return type and actual text/HTML representation, unavailable/malformed URL behavior, oversized-content behavior, original/final URL, redirect chain, status code, headers and content type are **NOT EXPOSED / NOT VERIFIED** at target runtime. Documentation demonstrates return use (`response.body.decode("utf-8")` for `get`; rendered string for `render`) but that is API evidence, not an observed target-runtime result.
+
+### Value versus fees
+
+The installed `genlayer-py@0.19.0rc2` source documents `estimate_transaction_fees_for_write`, `fees.distribution`, `fees.feeValue`, `write_contract(..., value=...)`, receipt wait through `wait_until="finalized"`, and lifecycle inspection. The v0.6 RC fee-funded lifecycle therefore supports an independent payable stake `value` and protocol fee object. Every future write must estimate/submit fees separately and only treat the action as committed after finality and an authoritative state reread.
+
+### Architecture changes caused by verification
+
+The active target is now canonical Studio Next / 61997 through `studio-dev` presets. The evidence design is tightened: until target runtime proves redirect metadata, V1 rejects redirects and keeps only the submitted permitted URL plus source rule ID, mode, timestamp, bounded representation and fingerprint. Raw live pages never participate in strict equality. No backend evidence authority is needed.
+
 The system cannot eliminate compromised official sources, post-finality corrections, availability failures, semantic disagreement, or the legal/regulatory implications of financial prediction agreements. It must not describe refunds as legal advice or assume all jurisdictions permit the product.
 
 ## STAGE 2 REMAINS BLOCKED
 
-Do not start Stage 2. The pinned CLI/JS/Transaction Kit artifacts are now inspected, but the supplied `studio-next` RPC has not been proven to be the supported alias of the RC preset's `studio-dev` RPC. Obtain explicit Agent Tank/GenLayer confirmation or an amended requirement. Then run a direct, non-production proof using the approved endpoint and exact v0.3.0 runner to verify the render representation, failures, and redirect/URL metadata. If that proof differs materially from this audit, revise this document before implementation.
+Do not start Stage 2. The environment and pinned runner are verified, but the required real test-only GenVM render proof has not been possible without a configured funded Studio Next account. After the user supplies or authorizes a test account/faucet flow, deploy a clearly labeled throwaway render probe only to Studio Next / `61997` through `studio-dev`, record its address/transactions/output, and revise this audit if the runtime differs from the documented behavior.
