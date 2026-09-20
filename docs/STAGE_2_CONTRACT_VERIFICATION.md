@@ -137,3 +137,7 @@ Lint, semantic check, and the 14-test deterministic suite pass. The browser runn
 ## Stage 2.2G third deployment verification
 
 Transaction `0xa958d26dd9cd271b3fa62a54b33ba333306dc3f448c03ed8d9ff546e8ed48188` independently reports sender Participant A, zero transaction value, `FINALIZED`, `FINISHED_WITH_RETURN`, and `MAJORITY_AGREE`. The resulting Intelligent Contract address is `0x8b1072183F0D248b17A634D67Fd314e4c3566d5a`; `gen_getContractSchema` returns all 11 expected RESULTLINE methods, and `gen_getContractCode` decodes to source blob `597cd49318c028475bbef9183094241caf056cb4`. A read-only initial-state call was not completed through the available RPC wrapper, so deployment is not marked fully verified and no lifecycle write is authorized.
+
+## Stage 2.2H read-only initial-state verification
+
+Using pinned `genlayer-js@2.0.0-rc.1` `client.readContract(...)` against `studioDevnet`, the deployed contract returned `get_agreement_count() = 0` and `get_withdrawable(0xaffe15eec45b68835cc9e5b4ab85dd5deae8e70b) = 0`. These calls generated no transaction hash, required no wallet approval, and changed no state. The optional `get_agreement(0)` sanity call was attempted read-only and returned an RPC execution-parameter error; it is non-blocking because the required fresh-state reads passed. Attempt #3 is now deployment-verified. The live two-wallet lifecycle remains a separate gated stage.
