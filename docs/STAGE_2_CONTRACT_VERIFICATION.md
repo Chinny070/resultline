@@ -150,6 +150,10 @@ The corrected source introduces an explicit immutable `temporal_mode`: `POST_EVE
 
 The correction window remains stored metadata but has no enforced runtime behavior in V1. Lint/check pass and the deterministic suite reports 16 passing tests. No deployment or blockchain transaction was performed. A fourth deployment remains gated pending review.
 
+## Stage 2.3D fourth deployment verification
+
+Transaction `0x859e35812917a7763a57b7d11103763fe700ba0a62a5daff4375cebcb97811f5` is independently verified as `FINISHED_WITH_RETURN`, `MAJORITY_AGREE`, and `FINALIZED`, with resulting current test-only contract `0xbc0279B6BB9f558D0da0C2E7fAD1266FCc6f890C`. The authoritative schema contains all 11 expected methods; `create_agreement` includes `temporal_mode` and no `correction_window`. `gen_getContractCode` matches source blob `2736b26d7377fc5354935d736f96cef2a81c5d1d`, and pinned SDK read-only calls return agreement count `0` and Participant A withdrawable `0`. Fee deposit is `100000000000010352` wei, consumed `78773500000000` wei, refund `99921226500010352` wei, user value `0`. No lifecycle write was performed.
+
 ## Stage 2.3C final pre-deployment audit
 
 The inactive `correction_window` field was removed from the active V1 constitution and `create_agreement` interface; V1 has no correction-window behavior. Temporal validation now requires historical events to use `POST_EVENT_VERIFICATION` with `expected_event_at <= now < betting_closes_at <= resolution_not_before_at < resolution_deadline_at`, while `FORWARD_EVENT` requires `now < expected_event_at` and `betting_closes_at <= expected_event_at <= resolution_not_before_at < resolution_deadline_at`.
