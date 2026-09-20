@@ -11,6 +11,15 @@ MAX_URL = 512
 MAX_EVIDENCE = 4
 
 
+@gl.evm.contract_interface
+class _Recipient:
+    class View:
+        pass
+
+    class Write:
+        pass
+
+
 class Resultline(gl.contract.Contract):
     """Narrow V1, two-party, binary entertainment-outcome agreement.
 
@@ -336,7 +345,7 @@ class Resultline(gl.contract.Contract):
         if amount <= 0:
             raise gl.vm.UserError("nothing owed")
         self.owed[gl.message.sender_address] = 0
-        gl.contract.get_at(gl.message.sender_address).emit_transfer(amount, on="finalized")
+        _Recipient(gl.Address(gl.message.sender_address)).emit_transfer(value=gl.u256(amount))
 
     @gl.public.view
     def get_agreement(self, agreement_id: gl.u256) -> dict[str, typing.Any]:

@@ -125,6 +125,16 @@ def test_settlement_has_refund_branch_and_terminal_guard():
     assert 'self._credit(self.creators[idx], self.stakes[idx])' in text
 
 
+def test_withdraw_uses_external_eoa_transfer_and_sender_only():
+    text = ast.get_source_segment(SOURCE, METHODS["withdraw"])
+    assert "gl.message.sender_address" in text
+    assert "_Recipient" in SOURCE and "gl.evm.contract_interface" in SOURCE
+    assert "emit_transfer(value=gl.u256(amount))" in text
+    assert "get_at(" not in text
+    assert "self.owed[gl.message.sender_address] = 0" in text
+    assert "def withdraw(self)" in text and "account" not in text.split("def withdraw", 1)[1].split("def get_agreement", 1)[0]
+
+
 def test_no_external_authority_or_production_services():
     forbidden = ("requests", "httpx", "database", "sqlite", "fastapi", "nextjs", "61999")
     assert not any(token in SOURCE.lower() for token in forbidden)
