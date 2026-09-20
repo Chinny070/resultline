@@ -4,7 +4,7 @@
 <body><h1>Studio Next wallet preflight</h1><p>Read-only checks and a separately gated TEST-ONLY deployment preparation action.</p>
 <button id="connect">Connect Wallet — Read Only</button><section><h2>TEST-ONLY RESULTLINE INTEGRATION DEPLOYMENT</h2><button id="deploy" disabled>Prepare TEST-ONLY RESULTLINE Deployment</button><button id="track" disabled>Track Saved Deployment (Read Only)</button><p><strong>Warning:</strong> this prepares a real deployment transaction in MetaMask. Review it manually; never approve automatically.</p></section><p id="status"></p><dl id="details"></dl>
 <script type="module">
-const TARGET=61997n, EXPECTED='0xaffe15eec45b68835cc9e5b4ab85dd5deae8e70b', BLOB='ef197b26642e408b2e4aa31181ffcf06c7d95dd9', RPC='https://studio-dev.genlayer.com/api', status=document.querySelector('#status'), details=document.querySelector('#details'); let account;
+const TARGET=61997n, EXPECTED='0xaffe15eec45b68835cc9e5b4ab85dd5deae8e70b', BLOB='597cd49318c028475bbef9183094241caf056cb4', RPC='https://studio-dev.genlayer.com/api', status=document.querySelector('#status'), details=document.querySelector('#details'); let account;
 const show=(label,value,cls='')=>{const d=document.createElement('div');d.innerHTML=`<dt>${label}</dt><dd class="${cls}">${value}</dd>`;details.append(d)};
 document.querySelector('#connect').addEventListener('click',async()=>{details.replaceChildren();try{if(!window.ethereum)throw Error('No EIP-1193 wallet provider found.');
  const accounts=await window.ethereum.request({method:'eth_requestAccounts'}); const address=accounts?.[0]; if(!address)throw Error('No account was authorized.'); account=address;

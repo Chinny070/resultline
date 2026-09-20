@@ -127,3 +127,9 @@ The pinned RC declarations were verified: `deployContract(...)` returns `Promise
 ## Stage 2.2E second deployment verification
 
 The supplied transaction `0x03baee62a7b3482357afb8768286d819be1db9acc9196160d74cd45710fd1bdd` was independently read through Studio Dev RPC. Sender is Participant A, transaction value/user value is zero, destination is the canonical consensus contract, status is `FINALIZED`, and consensus decision is `ACCEPTED` / `MAJORITY_AGREE`. However, GenLayer execution is explicitly `FINISHED_WITH_ERROR`. Leader and validator receipts report `TypeError: incompatible storage type: \`TreeMap\` <- \`dict\`` at contract initialization (`self.owed = {}`). The transaction therefore did not produce a verified deployed RESULTLINE contract; schema/code/address/initial-state verification is not asserted, and no retry or lifecycle transaction was made.
+
+## Stage 2.2F storage compatibility remediation
+
+The installed RC template demonstrates that contract-level `TreeMap` fields are runtime-managed and must not be assigned Python dictionaries in `__init__`; its example uses `pass` and initializes entries lazily with `get_or_insert_default` or keyed assignment. RESULTLINE's only incompatible assignment was `self.owed = {}`. It was removed; all scalar and `DynArray` fields retain their existing initialization, and TreeMap operations remain keyed assignment plus `.get(key, default)`, matching the verified API. The corrected source blob is `597cd49318c028475bbef9183094241caf056cb4`.
+
+Lint, semantic check, and the 14-test deterministic suite pass. The browser runner source gate now requires the corrected blob. The former blob `ef197b26642e408b2e4aa31181ffcf06c7d95dd9` is historical failed source and must not be redeployed. No blockchain transaction was submitted during remediation.

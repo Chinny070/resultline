@@ -87,7 +87,6 @@ class Resultline(gl.contract.Contract):
         self.resolution_category_matches = []
         self.resolution_evidence_sufficiency = []
         self.resolution_evidence_ids = []
-        self.owed = {}
 
     def _bounded(self, value: str, name: str) -> None:
         if not value or len(value) > MAX_TEXT:
