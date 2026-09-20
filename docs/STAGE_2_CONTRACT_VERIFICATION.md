@@ -175,3 +175,6 @@ Read-only controls A (`cancel_agreement`), B (exact payable `create_agreement` w
 ## Stage 2.4D — Transaction Kit RC2 fee path
 
 Installed `@genlayer/transaction-kit@0.1.0-rc.2` successfully produced a read-only Studio Dev quote using its network-policy path. It calls raw `client.estimateTransactionFees(...)` rather than `estimateTransactionFeesForWrite` and does not simulate the specific method calldata. The quote returned `feeValue = 175000000000112794 wei`, `userValue = 1000000000000000 wei`, and `total = 176000000000112794 wei`, with verified fee-policy hash and complete distribution/breakdown fields. No transaction or signature occurred; Agreement 0 remains absent. The browser preparation runner now uses this official RC2 quote path and remains separately gated.
+## Stage 2.4E — Agreement 0 inspection preparation
+
+The browser runner now creates a fresh 30-minute `POST_EVENT_VERIFICATION` window at preparation time, requires at least 20 minutes remaining, reads Participant A's current balance, obtains a fresh verified Transaction Kit RC2 policy quote, and displays all constitution/timing/fee values before any wallet action. The create control remains separately gated; this stage submitted no transaction and invokes no lifecycle method.
