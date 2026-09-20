@@ -28,6 +28,7 @@ class Resultline(gl.contract.Contract):
     event_ids: gl.storage.DynArray[str]
     primary_hosts: gl.storage.DynArray[str]
     primary_paths: gl.storage.DynArray[str]
+    temporal_modes: gl.storage.DynArray[str]
     positions: gl.storage.DynArray[str]
     creators: gl.storage.DynArray[gl.Address]
     counterparties: gl.storage.DynArray[gl.Address]
@@ -64,6 +65,7 @@ class Resultline(gl.contract.Contract):
         self.event_ids = []
         self.primary_hosts = []
         self.primary_paths = []
+        self.temporal_modes = []
         self.positions = []
         self.creators = []
         self.counterparties = []
@@ -116,6 +118,7 @@ class Resultline(gl.contract.Contract):
         primary_host: str,
         primary_path: str,
         position: str,
+        temporal_mode: str,
         betting_closes_at: gl.u256,
         expected_event_at: gl.u256,
         resolution_not_before_at: gl.u256,
@@ -126,6 +129,8 @@ class Resultline(gl.contract.Contract):
             raise gl.vm.UserError("unsupported outcome type")
         if position not in ("YES", "NO"):
             raise gl.vm.UserError("invalid position")
+        if temporal_mode not in ("FORWARD_EVENT", "POST_EVENT_VERIFICATION"):
+            raise gl.vm.UserError("invalid temporal mode")
         for value, name in ((proposition, "proposition"), (subject, "subject"),
                             (category, "category"), (organizer, "organizer"),
                             (event_id, "event_id"), (primary_host, "primary_host")):
@@ -137,7 +142,12 @@ class Resultline(gl.contract.Contract):
         stake = gl.u256(gl.message.value)
         if stake <= 0:
             raise gl.vm.UserError("positive stake required")
-        if not (betting_closes_at <= expected_event_at <= resolution_not_before_at < resolution_deadline_at):
+        now = self._now()
+        if temporal_mode == "POST_EVENT_VERIFICATION":
+            valid_temporal = expected_event_at <= now < betting_closes_at <= resolution_not_before_at < resolution_deadline_at
+        else:
+            valid_temporal = now <= expected_event_at and betting_closes_at <= expected_event_at <= resolution_not_before_at < resolution_deadline_at
+        if not valid_temporal:
             raise gl.vm.UserError("invalid time ordering")
         idx = int(self.agreement_count)
         self.agreement_count += 1
@@ -151,6 +161,7 @@ class Resultline(gl.contract.Contract):
         self.primary_hosts.append(primary_host)
         self.primary_paths.append(primary_path)
         self.positions.append(position)
+        self.temporal_modes.append(temporal_mode)
         self.creators.append(gl.message.sender_address)
         self.counterparties.append(gl.message.sender_address)
         self.stakes.append(stake)
@@ -202,10 +213,16 @@ class Resultline(gl.contract.Contract):
             raise gl.vm.UserError("too early")
         if len(source_url) == 0 or len(source_url) > MAX_URL or not source_url.startswith("https://"):
             raise gl.vm.UserError("HTTPS source required")
-        host_prefix = "https://" + self.primary_hosts[idx]
-        if not source_url.startswith(host_prefix):
+        prefix = "https://"
+        if not source_url.startswith(prefix):
             raise gl.vm.UserError("source host not permitted")
-        if self.primary_paths[idx] and not source_url.startswith(host_prefix + self.primary_paths[idx]):
+        authority_and_path = source_url[len(prefix):]
+        authority = authority_and_path.split("/", 1)[0].split("?", 1)[0].split("#", 1)[0]
+        if authority != self.primary_hosts[idx] or "@" in authority or ":" in authority:
+            raise gl.vm.UserError("source host not permitted")
+        remainder = source_url[len(prefix) + len(authority):]
+        path = remainder.split("?", 1)[0].split("#", 1)[0]
+        if path != self.primary_paths[idx]:
             raise gl.vm.UserError("source path not permitted")
         if int(self.evidence_counts[idx]) >= MAX_EVIDENCE:
             raise gl.vm.UserError("evidence limit")
@@ -240,7 +257,7 @@ class Resultline(gl.contract.Contract):
         context = (
             "CONSTITUTION\n" + self.outcome_types[idx] + "\n" + self.propositions[idx] + "\n"
             + self.subjects[idx] + "\n" + self.categories[idx] + "\n" + self.organizers[idx] + "\n"
-            + self.event_ids[idx] + "\n" + str(self.expected_events[idx]) + "\n"
+            + self.event_ids[idx] + "\n" + self.temporal_modes[idx] + "\n" + str(self.expected_events[idx]) + "\n"
             + str(self.resolution_deadlines[idx]) + "\nSOURCE\n" + self.primary_hosts[idx]
             + self.primary_paths[idx] + "\nEVIDENCE\n"
         )

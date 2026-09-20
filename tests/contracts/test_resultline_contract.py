@@ -69,6 +69,21 @@ def test_source_policy_is_deterministic():
     assert "primary_paths" in text
 
 
+def test_temporal_modes_and_exact_source_authority_are_explicit():
+    text = SOURCE
+    assert '"FORWARD_EVENT", "POST_EVENT_VERIFICATION"' in text
+    assert "authority != self.primary_hosts[idx]" in text
+    assert "path != self.primary_paths[idx]" in text
+    assert "source_url.startswith(host_prefix)" not in text
+
+
+def test_source_authority_regression_vectors_are_not_prefix_accepted():
+    text = ast.get_source_segment(SOURCE, METHODS["freeze_evidence"])
+    assert "authority != self.primary_hosts[idx]" in text
+    assert "@" in text and ":" in text
+    assert "remainder.split(\"?\", 1)[0]" in text
+
+
 def test_failure_cannot_write_semantic_boolean():
     text = ast.get_source_segment(SOURCE, CONTRACT)
     assert "CONFIRMED_TRUE" in text and "CONFIRMED_FALSE" in text

@@ -141,3 +141,11 @@ Transaction `0xa958d26dd9cd271b3fa62a54b33ba333306dc3f448c03ed8d9ff546e8ed48188`
 ## Stage 2.2H read-only initial-state verification
 
 Using pinned `genlayer-js@2.0.0-rc.1` `client.readContract(...)` against `studioDevnet`, the deployed contract returned `get_agreement_count() = 0` and `get_withdrawable(0xaffe15eec45b68835cc9e5b4ab85dd5deae8e70b) = 0`. These calls generated no transaction hash, required no wallet approval, and changed no state. The optional `get_agreement(0)` sanity call was attempted read-only and returned an RPC execution-parameter error; it is non-blocking because the required fresh-state reads passed. Attempt #3 is now deployment-verified. The live two-wallet lifecycle remains a separate gated stage.
+
+## Stage 2.3B temporal and source-authority remediation
+
+The superseded verified deployment remains historical-only: contract `0x8b1072183F0D248b17A634D67Fd314e4c3566d5a`, source blob `597cd49318c028475bbef9183094241caf056cb4`. No stake was committed to it.
+
+The corrected source introduces an explicit immutable `temporal_mode`: `POST_EVENT_VERIFICATION` permits a truthful past `expected_event_at` with a future betting close and later resolution window; `FORWARD_EVENT` requires the event to remain future and preserves the event-to-resolution ordering. Source eligibility now requires HTTPS, exact authority equality, rejects userinfo/ports, and requires an exact path (query strings may follow the exact path). The browser runner source gate now requires blob `a1adeeffdcc03258c1ecca70b636c6ffb4461079`.
+
+The correction window remains stored metadata but has no enforced runtime behavior in V1. Lint/check pass and the deterministic suite reports 16 passing tests. No deployment or blockchain transaction was performed. A fourth deployment remains gated pending review.
