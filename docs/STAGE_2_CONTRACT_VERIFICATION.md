@@ -178,3 +178,8 @@ Installed `@genlayer/transaction-kit@0.1.0-rc.2` successfully produced a read-on
 ## Stage 2.4E — Agreement 0 inspection preparation
 
 The browser runner now creates a fresh 30-minute `POST_EVENT_VERIFICATION` window at preparation time, requires at least 20 minutes remaining, reads Participant A's current balance, obtains a fresh verified Transaction Kit RC2 policy quote, and displays all constitution/timing/fee values before any wallet action. The create control remains separately gated; this stage submitted no transaction and invokes no lifecycle method.
+## Stage 2.5 — Timestamp compatibility fix
+
+Studio Dev execution proved that `gl.vm.get_timestamp()` fails with `SystemError: 2: inval` during `create_agreement`. Current GenLayer documentation specifies the deterministic transaction clock via `datetime.now(timezone.utc)` (the runtime wires the standard-library clock to the transaction datetime). The contract now uses that accessor in `_now()`; temporal semantics are unchanged. Local lint/check and 19 deterministic tests pass. The corrected source blob is `39e2c19441154d9a566652262a3f43553ad50fe6`.
+
+The prior deployed contract remains historically superseded by the runtime incompatibility. No corrected redeployment has yet been submitted; browser-wallet approval is required before that external transaction can occur.

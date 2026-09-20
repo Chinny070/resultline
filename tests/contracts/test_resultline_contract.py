@@ -77,6 +77,12 @@ def test_temporal_modes_and_exact_source_authority_are_explicit():
     assert "source_url.startswith(host_prefix)" not in text
 
 
+def test_timestamp_accessor_uses_supported_deterministic_transaction_clock():
+    text = ast.get_source_segment(SOURCE, METHODS["_now"])
+    assert "datetime.now(timezone.utc)" in text
+    assert "gl.vm.get_timestamp" not in text
+
+
 def test_source_authority_regression_vectors_are_not_prefix_accepted():
     text = ast.get_source_segment(SOURCE, METHODS["freeze_evidence"])
     assert "authority != self.primary_hosts[idx]" in text

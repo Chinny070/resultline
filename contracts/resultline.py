@@ -1,6 +1,7 @@
 # { "Depends": "py-genlayer:5jycge4q8k23462jtb0b9fyey1s9qz928sz2nbrd9mg4sxqg2qng" }
 
 import typing
+from datetime import datetime, timezone
 
 import genlayer as gl
 
@@ -93,7 +94,7 @@ class Resultline(gl.contract.Contract):
             raise gl.vm.UserError(f"invalid {name}")
 
     def _now(self) -> gl.u256:
-        return gl.u256(int(gl.vm.get_timestamp().timestamp()))
+        return gl.u256(int(datetime.now(timezone.utc).timestamp()))
 
     def _valid_id(self, agreement_id: gl.u256) -> int:
         idx = int(agreement_id)
