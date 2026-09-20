@@ -1,0 +1,3 @@
+.detail{background:var(--cream);color:var(--ink);padding:clamp(1.2rem,4vw,4rem)}
+.detail h2{max-width:900px}.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem;border-top:1px solid #08090d44;padding-top:1.5rem}.detail-grid b,.detail-grid strong{display:block;margin:.45rem 0}.detail-grid b{font-size:.62rem;letter-spacing:.14em}.evidence-list{margin-top:2rem;display:grid;gap:1rem}.evidence-list article{background:var(--cyan);padding:1.2rem}.evidence-list a{word-break:break-all;text-decoration:underline}.actions{display:flex;gap:.8rem;flex-wrap:wrap;margin-top:2rem}.ticket:focus-visible,.btn:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--acid);outline-offset:4px}
+@media(max-width:800px){.detail-grid{grid-template-columns:1fr}}
