@@ -28,7 +28,12 @@ const ensureStudioNet = async (p: Provider) => {
   const current = Number(await p.request({method:'eth_chainId'}));
   if (current === CONFIG.chainId) return true;
   try { await p.request({method:'wallet_switchEthereumChain', params:[{chainId: STUDIO_NET.chainId}]}); }
-  catch (e: any) { if (e?.code !== 4902) throw e; await p.request({method:'wallet_addEthereumChain', params:[STUDIO_NET]}); await p.request({method:'wallet_switchEthereumChain', params:[{chainId: STUDIO_NET.chainId}]}); }
+  catch (e: any) {
+    const detail = String(e?.message || e);
+    if (e?.code !== 4902 && !/same RPC endpoint|already exists|already added/i.test(detail)) throw e;
+    if (e?.code === 4902) await p.request({method:'wallet_addEthereumChain', params:[STUDIO_NET]});
+    await p.request({method:'wallet_switchEthereumChain', params:[{chainId: STUDIO_NET.chainId}]});
+  }
   return Number(await p.request({method:'eth_chainId'})) === CONFIG.chainId;
 };
 const showNetworkState = (chain: number, account?: string) => { const wallet = document.querySelector<HTMLElement>('#wallet'); if (wallet) wallet.textContent = chain === CONFIG.chainId && account ? `${account.slice(0,6)}…${account.slice(-4)} · StudioNet` : 'Switch to StudioNet'; const status = document.querySelector<HTMLElement>('#form-status'); if (status && chain !== CONFIG.chainId) status.textContent = `Wrong network — switch to StudioNet (${CONFIG.chainId})`; };
