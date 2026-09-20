@@ -119,3 +119,7 @@ Interactive user action remains required: connect an authorized browser wallet o
 ## Stage 2.2C deployment postflight boundary
 
 The user-approved browser flow reported that the deployment request returned, but the runner did not preserve the returned transaction identifier. Read-only standard RPC inspection confirmed chain `61997` and the canonical Studio endpoint, but `eth_getBlockByNumber` exposes empty transaction lists on Studio Dev and therefore cannot identify this GenLayer deployment by sender alone. No transaction hash, receipt, execution status, consensus decision, finalization, deployed address, schema, or deployed-code identity is asserted here. No follow-up transaction was submitted.
+
+## Stage 2.2D deployment observability hardening
+
+The pinned RC declarations were verified: `deployContract(...)` returns `Promise<0x${string}>`; read-only status APIs are `getTransaction`, `waitForTransactionReceipt({hash, waitUntil: "decided"|"finalized"})`, `waitForDecision`, `waitForFinalization`, and `advanced.getTransactionLifecycle`. The runner now captures the return immediately, refuses to report submission without a string identifier, persists only public metadata and the transaction identifier in `localStorage`, and provides a separate manual read-only tracking button. No automatic follow-up transaction or RESULTLINE lifecycle call is present. The first deployment attempt remains historically UNVERIFIED.
