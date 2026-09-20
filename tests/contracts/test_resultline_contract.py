@@ -84,6 +84,20 @@ def test_source_authority_regression_vectors_are_not_prefix_accepted():
     assert "remainder.split(\"?\", 1)[0]" in text
 
 
+def test_v1_does_not_expose_inactive_correction_window_policy():
+    assert "correction_window" not in SOURCE
+    assert "correction_windows" not in SOURCE
+
+
+def test_creation_inputs_reject_url_like_hosts_paths_and_fragments():
+    text = ast.get_source_segment(SOURCE, METHODS["create_agreement"])
+    assert '"/", "?", "#", ":", "@"' in text
+    assert '"?" in primary_path' in text
+    assert '"#" in primary_path' in text
+    freeze = ast.get_source_segment(SOURCE, METHODS["freeze_evidence"])
+    assert '"#" in source_url' in freeze
+
+
 def test_failure_cannot_write_semantic_boolean():
     text = ast.get_source_segment(SOURCE, CONTRACT)
     assert "CONFIRMED_TRUE" in text and "CONFIRMED_FALSE" in text

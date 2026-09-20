@@ -149,3 +149,9 @@ The superseded verified deployment remains historical-only: contract `0x8b107218
 The corrected source introduces an explicit immutable `temporal_mode`: `POST_EVENT_VERIFICATION` permits a truthful past `expected_event_at` with a future betting close and later resolution window; `FORWARD_EVENT` requires the event to remain future and preserves the event-to-resolution ordering. Source eligibility now requires HTTPS, exact authority equality, rejects userinfo/ports, and requires an exact path (query strings may follow the exact path). The browser runner source gate now requires blob `a1adeeffdcc03258c1ecca70b636c6ffb4461079`.
 
 The correction window remains stored metadata but has no enforced runtime behavior in V1. Lint/check pass and the deterministic suite reports 16 passing tests. No deployment or blockchain transaction was performed. A fourth deployment remains gated pending review.
+
+## Stage 2.3C final pre-deployment audit
+
+The inactive `correction_window` field was removed from the active V1 constitution and `create_agreement` interface; V1 has no correction-window behavior. Temporal validation now requires historical events to use `POST_EVENT_VERIFICATION` with `expected_event_at <= now < betting_closes_at <= resolution_not_before_at < resolution_deadline_at`, while `FORWARD_EVENT` requires `now < expected_event_at` and `betting_closes_at <= expected_event_at <= resolution_not_before_at < resolution_deadline_at`.
+
+Host inputs now reject URL-like forms, userinfo, ports, query/fragment text, and empty values. Source URLs require HTTPS, exact authority equality, exact path, and no fragments; query parameters remain allowed. The corrected source blob is `2736b26d7377fc5354935d736f96cef2a81c5d1d`, and the browser runner gate was updated accordingly. The deterministic suite reports 18 passing tests; no deployment or blockchain transaction occurred.

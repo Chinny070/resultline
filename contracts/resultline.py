@@ -37,7 +37,6 @@ class Resultline(gl.contract.Contract):
     expected_events: gl.storage.DynArray[gl.u256]
     resolution_not_before: gl.storage.DynArray[gl.u256]
     resolution_deadlines: gl.storage.DynArray[gl.u256]
-    correction_windows: gl.storage.DynArray[gl.u256]
     evidence_counts: gl.storage.DynArray[gl.u256]
     evidence_urls: gl.storage.DynArray[str]
     evidence_text: gl.storage.DynArray[str]
@@ -74,7 +73,6 @@ class Resultline(gl.contract.Contract):
         self.expected_events = []
         self.resolution_not_before = []
         self.resolution_deadlines = []
-        self.correction_windows = []
         self.evidence_counts = []
         self.evidence_urls = []
         self.evidence_text = []
@@ -123,7 +121,6 @@ class Resultline(gl.contract.Contract):
         expected_event_at: gl.u256,
         resolution_not_before_at: gl.u256,
         resolution_deadline_at: gl.u256,
-        correction_window: gl.u256,
     ) -> gl.u256:
         if outcome_type not in ("AWARD_WINNER", "COMPETITION_WINNER"):
             raise gl.vm.UserError("unsupported outcome type")
@@ -135,9 +132,12 @@ class Resultline(gl.contract.Contract):
                             (category, "category"), (organizer, "organizer"),
                             (event_id, "event_id"), (primary_host, "primary_host")):
             self._bounded(value, name)
-        if len(primary_host) > MAX_URL or not primary_host or "." not in primary_host:
+        if (not primary_host or len(primary_host) > MAX_URL or "." not in primary_host
+                or any(token in primary_host for token in ("/", "?", "#", ":", "@"))
+                or primary_host.startswith("https://") or primary_host.startswith("http://")):
             raise gl.vm.UserError("invalid host")
-        if primary_path and len(primary_path) > MAX_URL or primary_path and not primary_path.startswith("/"):
+        if (not primary_path or len(primary_path) > MAX_URL or not primary_path.startswith("/")
+                or "?" in primary_path or "#" in primary_path or "://" in primary_path):
             raise gl.vm.UserError("invalid path")
         stake = gl.u256(gl.message.value)
         if stake <= 0:
@@ -146,7 +146,7 @@ class Resultline(gl.contract.Contract):
         if temporal_mode == "POST_EVENT_VERIFICATION":
             valid_temporal = expected_event_at <= now < betting_closes_at <= resolution_not_before_at < resolution_deadline_at
         else:
-            valid_temporal = now <= expected_event_at and betting_closes_at <= expected_event_at <= resolution_not_before_at < resolution_deadline_at
+            valid_temporal = now < expected_event_at and betting_closes_at <= expected_event_at <= resolution_not_before_at < resolution_deadline_at
         if not valid_temporal:
             raise gl.vm.UserError("invalid time ordering")
         idx = int(self.agreement_count)
@@ -169,7 +169,6 @@ class Resultline(gl.contract.Contract):
         self.expected_events.append(expected_event_at)
         self.resolution_not_before.append(resolution_not_before_at)
         self.resolution_deadlines.append(resolution_deadline_at)
-        self.correction_windows.append(correction_window)
         self.evidence_counts.append(0)
         self.resolution_outcomes.append("")
         self.resolution_authorities.append("")
@@ -211,7 +210,7 @@ class Resultline(gl.contract.Contract):
             raise gl.vm.UserError("evidence not allowed")
         if self._now() < self.resolution_not_before[idx]:
             raise gl.vm.UserError("too early")
-        if len(source_url) == 0 or len(source_url) > MAX_URL or not source_url.startswith("https://"):
+        if len(source_url) == 0 or len(source_url) > MAX_URL or not source_url.startswith("https://") or "#" in source_url:
             raise gl.vm.UserError("HTTPS source required")
         prefix = "https://"
         if not source_url.startswith(prefix):
@@ -221,7 +220,7 @@ class Resultline(gl.contract.Contract):
         if authority != self.primary_hosts[idx] or "@" in authority or ":" in authority:
             raise gl.vm.UserError("source host not permitted")
         remainder = source_url[len(prefix) + len(authority):]
-        path = remainder.split("?", 1)[0].split("#", 1)[0]
+        path = remainder.split("?", 1)[0]
         if path != self.primary_paths[idx]:
             raise gl.vm.UserError("source path not permitted")
         if int(self.evidence_counts[idx]) >= MAX_EVIDENCE:
