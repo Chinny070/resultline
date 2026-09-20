@@ -167,3 +167,8 @@ The runner now provides a read-only preparation button and a separately gated cr
 ## Stage 2.4B — Payable fee-estimation audit
 
 Pinned `genlayer-js@2.0.0-rc.1` requires a viem JSON-RPC account object for `estimateTransactionFeesForWrite`; its implementation derives `from` from `account.address`, includes payable `value` as hex, and returns `distribution`, `messageAllocations`, `feeValue`, and `policy`. The runner now passes `{address, type: "json-rpc"}`, includes the exact 0.001 GEN value, requires a complete fee object, and fails closed otherwise. The Studio estimator still returned `Missing or invalid parameters` during this read-only audit, so no signature is permitted.
+## Stage 2.4C — Studio estimator control matrix
+
+The pinned SDK constructs `sim_estimateTransactionFees` requests with `type: "write"`, `to`, `from`, serialized calldata, `transaction_hash_variant`, optional hex `value`, and generated fee fields. The account is encoded from `account.address`; calldata uses the GenLayer serializer and bigint values are serialized by that encoder.
+
+Read-only controls A (`cancel_agreement`), B (exact payable `create_agreement` with 0.001 GEN), and C (same create call without value) all received RPC error `-32000: Missing or invalid parameters`. This demonstrates the rejection is not specific to payable value or RESULTLINE argument semantics. The failure layer is an external Studio Dev `sim_estimateTransactionFees` compatibility/API issue with the pinned RC estimator path. No runner workaround or guessed fee is permitted.
