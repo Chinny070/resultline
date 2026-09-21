@@ -2,7 +2,7 @@
 import './style.css';
 import './detail.css';
 
-const RESULTLINE_CONTRACT_ADDRESS = '0x9877d9af48565797F71dA4492f5e4C8e44c944Cb' as const;
+const RESULTLINE_CONTRACT_ADDRESS = '0x9877d9af48565797f71da4492f5e4c8e44c944cb' as const;
 const CONFIG = {
   network: 'StudioNet / studionet', chainId: 61999,
   rpc: 'https://studio.genlayer.com/api',
